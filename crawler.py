@@ -5,7 +5,12 @@ from collections import deque
 from urllib.parse import urljoin, urlparse
 
 import requests
-from bs4 import BeautifulSoup
+try:
+    from bs4 import BeautifulSoup
+except ModuleNotFoundError:
+    print("Error: missing dependency 'beautifulsoup4'.")
+    print("Install it with `pip install -r requirements.txt` and re-run the script.")
+    raise
 
 
 def slugify(text: str) -> str:

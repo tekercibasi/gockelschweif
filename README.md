@@ -8,6 +8,7 @@ This repository contains a simple crawler script for exporting the contents of a
    ```bash
    pip install -r requirements.txt
    ```
+   If you see `ModuleNotFoundError: No module named 'bs4'`, install the dependencies first.
 2. Run the crawler:
    ```bash
    python crawler.py https://allmendina.de --outdir output
