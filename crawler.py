@@ -31,7 +31,10 @@ def html_to_markdown(soup):
     if soup.body is None:
         return ''
     md = []
-    for elem in soup.body.recursiveChildGenerator():
+    # BeautifulSoup's recursiveChildGenerator was deprecated in 4.0.0; use
+    # the descendants generator instead.
+    for elem in soup.body.descendants:
+
         if getattr(elem, 'name', None):
             if elem.name in ['h1', 'h2', 'h3', 'h4', 'h5', 'h6']:
                 level = int(elem.name[1])
@@ -79,18 +82,23 @@ def crawl(base_url, outdir='output'):
             queue.append(link)
 
 
-BASE_URL = "https://allmendina.de"
+DEFAULT_URL = "https://allmendina.de"
+
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Crawl allmendina.de and output Markdown files.'
+        description='Crawl a website and output Markdown files.'
+    )
+    parser.add_argument(
+        'url', nargs='?', default=DEFAULT_URL,
+        help='Base URL to crawl (default: %(default)s)'
     )
     parser.add_argument(
         '--outdir', default='output', help='Directory for Markdown output'
     )
     args = parser.parse_args()
-    crawl(BASE_URL, args.outdir)
+    crawl(args.url, args.outdir)
 
 
 if __name__ == '__main__':

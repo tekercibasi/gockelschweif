@@ -9,9 +9,12 @@ This repository contains a simple crawler script for exporting the contents of a
    pip install -r requirements.txt
    ```
    If you see `ModuleNotFoundError: No module named 'bs4'`, install the dependencies first.
-2. Run the crawler (it is preconfigured for `https://allmendina.de`):
+
+2. Run the crawler. Provide the URL you want to crawl (defaults to
+   `https://allmendina.de`):
    ```bash
-   python crawler.py --outdir output
+   python crawler.py https://allmendina.de --outdir output
+
    ```
    The resulting Markdown files will be written to the specified directory.
 
