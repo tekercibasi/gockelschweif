@@ -34,6 +34,7 @@ def html_to_markdown(soup):
     # BeautifulSoup's recursiveChildGenerator was deprecated in 4.0.0; use
     # the descendants generator instead.
     for elem in soup.body.descendants:
+
         if getattr(elem, 'name', None):
             if elem.name in ['h1', 'h2', 'h3', 'h4', 'h5', 'h6']:
                 level = int(elem.name[1])
@@ -82,6 +83,7 @@ def crawl(base_url, outdir='output'):
 
 
 DEFAULT_URL = "https://allmendina.de"
+
 
 
 def main():
