@@ -28,6 +28,8 @@ def extract_links(soup, base_url, visited):
 
 
 def html_to_markdown(soup):
+    if soup.body is None:
+        return ''
     md = []
     for elem in soup.body.recursiveChildGenerator():
         if getattr(elem, 'name', None):
@@ -77,12 +79,18 @@ def crawl(base_url, outdir='output'):
             queue.append(link)
 
 
+BASE_URL = "https://allmendina.de"
+
+
 def main():
-    parser = argparse.ArgumentParser(description='Crawl a site and output Markdown files.')
-    parser.add_argument('url', help='Base URL to crawl')
-    parser.add_argument('--outdir', default='output', help='Directory for Markdown output')
+    parser = argparse.ArgumentParser(
+        description='Crawl allmendina.de and output Markdown files.'
+    )
+    parser.add_argument(
+        '--outdir', default='output', help='Directory for Markdown output'
+    )
     args = parser.parse_args()
-    crawl(args.url, args.outdir)
+    crawl(BASE_URL, args.outdir)
 
 
 if __name__ == '__main__':
