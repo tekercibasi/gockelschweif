@@ -95,12 +95,40 @@ def html_to_markdown(soup):
     return '\n\n'.join(md)
 
 
+def process_pdfs(soup, base_url, files_dir, counter):
+    os.makedirs(files_dir, exist_ok=True)
+    log_path = os.path.join(files_dir, "file_sources.txt")
+    log_lines = []
+    for a in soup.find_all("a", href=True):
+        href = a["href"]
+        full_url = urljoin(base_url, href)
+        if full_url.lower().endswith(".pdf"):
+            try:
+                resp = requests.get(full_url, timeout=10)
+                resp.raise_for_status()
+            except requests.RequestException:
+                continue
+            ext = os.path.splitext(urlparse(full_url).path)[1] or ".pdf"
+            local_name = f"file{counter[0]}{ext}"
+            counter[0] += 1
+            with open(os.path.join(files_dir, local_name), "wb") as fh:
+                fh.write(resp.content)
+            log_lines.append(f"{local_name} {full_url}\n")
+            a["href"] = f"linked-files/{local_name}"
+    if log_lines:
+        with open(log_path, "a", encoding="utf-8") as log_file:
+            for line in log_lines:
+                log_file.write(line)
+
+
 def crawl(base_url, outdir='output'):
     os.makedirs(outdir, exist_ok=True)
     images_dir = os.path.join(outdir, 'images')
+    files_dir = os.path.join(outdir, 'linked-files')
     visited = set()
     queue = deque([base_url])
     img_counter = [1]
+    file_counter = [1]
     while queue:
         url = queue.popleft()
         if url in visited:
@@ -113,6 +141,7 @@ def crawl(base_url, outdir='output'):
             continue
         soup = BeautifulSoup(r.text, 'html.parser')
         process_images(soup, url, images_dir, img_counter)
+        process_pdfs(soup, url, files_dir, file_counter)
         slug = slugify(urlparse(url).path or 'index')
         md = html_to_markdown(soup)
         with open(os.path.join(outdir, slug + '.md'), 'w', encoding='utf-8') as f:

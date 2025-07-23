@@ -27,5 +27,8 @@ This repository contains a simple crawler script for exporting the contents of a
    Any images referenced on the pages are downloaded to `<outdir>/images`
    with simplified names (e.g. `img1.jpg`). A mapping of original URLs
    is stored in `image_sources.txt` within that folder.
+   Linked PDF files are downloaded to `<outdir>/linked-files` and the
+   links in the generated Markdown point to the local copies. A mapping
+   of original PDF URLs is saved in `file_sources.txt` in that folder.
 
 Note: actual crawling might fail in restricted environments. The script expects internet access.
