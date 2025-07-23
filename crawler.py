@@ -1,6 +1,7 @@
 import argparse
 import os
 import re
+import time
 from collections import deque
 from urllib.parse import urljoin, urlparse
 
@@ -18,6 +19,14 @@ def slugify(text: str) -> str:
     return text.strip('-') or 'index'
 
 
+def generate_outdir(base_url: str) -> str:
+    """Create a default output directory name from the domain and current time."""
+    parsed = urlparse(base_url if '://' in base_url else f'https://{base_url}')
+    domain = (parsed.netloc or parsed.path).split('/')[0]
+    timestamp = time.strftime('%Y_%m_%d_%H.%M.%S')
+    return f'output_{domain}_{timestamp}'
+
+
 def extract_links(soup, base_url, visited):
     for a in soup.find_all('a', href=True):
         href = urljoin(base_url, a['href'])
@@ -25,6 +34,33 @@ def extract_links(soup, base_url, visited):
         if parsed.netloc == urlparse(base_url).netloc:
             if href not in visited:
                 yield href
+
+
+def process_images(soup, base_url, images_dir, counter):
+    os.makedirs(images_dir, exist_ok=True)
+    log_path = os.path.join(images_dir, "image_sources.txt")
+    log_lines = []
+    for img in soup.find_all("img"):
+        src = img.get("src")
+        if not src:
+            continue
+        img_url = urljoin(base_url, src)
+        try:
+            resp = requests.get(img_url, timeout=10)
+            resp.raise_for_status()
+        except requests.RequestException:
+            continue
+        ext = os.path.splitext(urlparse(img_url).path)[1] or ".img"
+        local_name = f"img{counter[0]}{ext}"
+        counter[0] += 1
+        with open(os.path.join(images_dir, local_name), "wb") as fh:
+            fh.write(resp.content)
+        log_lines.append(f"{local_name} {img_url}\n")
+        img["src"] = f"images/{local_name}"
+    if log_lines:
+        with open(log_path, "a", encoding="utf-8") as log_file:
+            for line in log_lines:
+                log_file.write(line)
 
 
 def html_to_markdown(soup):
@@ -59,10 +95,40 @@ def html_to_markdown(soup):
     return '\n\n'.join(md)
 
 
+def process_pdfs(soup, base_url, files_dir, counter):
+    os.makedirs(files_dir, exist_ok=True)
+    log_path = os.path.join(files_dir, "file_sources.txt")
+    log_lines = []
+    for a in soup.find_all("a", href=True):
+        href = a["href"]
+        full_url = urljoin(base_url, href)
+        if full_url.lower().endswith(".pdf"):
+            try:
+                resp = requests.get(full_url, timeout=10)
+                resp.raise_for_status()
+            except requests.RequestException:
+                continue
+            ext = os.path.splitext(urlparse(full_url).path)[1] or ".pdf"
+            local_name = f"file{counter[0]}{ext}"
+            counter[0] += 1
+            with open(os.path.join(files_dir, local_name), "wb") as fh:
+                fh.write(resp.content)
+            log_lines.append(f"{local_name} {full_url}\n")
+            a["href"] = f"linked-files/{local_name}"
+    if log_lines:
+        with open(log_path, "a", encoding="utf-8") as log_file:
+            for line in log_lines:
+                log_file.write(line)
+
+
 def crawl(base_url, outdir='output'):
     os.makedirs(outdir, exist_ok=True)
+    images_dir = os.path.join(outdir, 'images')
+    files_dir = os.path.join(outdir, 'linked-files')
     visited = set()
     queue = deque([base_url])
+    img_counter = [1]
+    file_counter = [1]
     while queue:
         url = queue.popleft()
         if url in visited:
@@ -87,24 +153,23 @@ def crawl(base_url, outdir='output'):
             queue.append(link)
 
 
-DEFAULT_URL = "https://allmendina.de"
-
-
 
 def main():
     parser = argparse.ArgumentParser(
         description='Crawl a website and output Markdown files.'
     )
     parser.add_argument(
-        'url', nargs='?', default=DEFAULT_URL,
-        help='Base URL to crawl (default: %(default)s)'
+        'url',
+        help='Base URL to crawl'
     )
     parser.add_argument(
-        '--outdir', default='output', help='Directory for Markdown output'
+        '--outdir', help='Directory for Markdown output'
     )
     args = parser.parse_args()
-    crawl(args.url, args.outdir)
+    outdir = args.outdir or generate_outdir(args.url)
+    crawl(args.url, outdir)
 
 
 if __name__ == '__main__':
     main()
+
