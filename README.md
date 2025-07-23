@@ -10,18 +10,17 @@ This repository contains a simple crawler script for exporting the contents of a
    ```
    If you see `ModuleNotFoundError: No module named 'bs4'`, install the dependencies first.
 
-2. Run the crawler. Provide the URL you want to crawl (defaults to
-   `https://allmendina.de`):
+2. Run the crawler. Provide the URL you want to crawl:
    If no `--outdir` is given, a directory named
    `output_<domain>_<timestamp>` will be created automatically (e.g.
    `output_art-institut.de_2025_07_23_13.15.12`).
    ```bash
-   python crawler.py https://allmendina.de
+   python crawler.py https://example.com
 
    ```
    To explicitly set the output directory:
    ```bash
-   python crawler.py https://allmendina.de --outdir output
+   python crawler.py https://example.com --outdir output
    ```
    The resulting Markdown files will be written to the chosen directory.
    Any images referenced on the pages are downloaded to `<outdir>/images`

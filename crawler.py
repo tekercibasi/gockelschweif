@@ -121,17 +121,14 @@ def crawl(base_url, outdir='output'):
             queue.append(link)
 
 
-DEFAULT_URL = "https://allmendina.de"
-
-
 
 def main():
     parser = argparse.ArgumentParser(
         description='Crawl a website and output Markdown files.'
     )
     parser.add_argument(
-        'url', nargs='?', default=DEFAULT_URL,
-        help='Base URL to crawl (default: %(default)s)'
+        'url',
+        help='Base URL to crawl'
     )
     parser.add_argument(
         '--outdir', help='Directory for Markdown output'
