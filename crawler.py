@@ -1,6 +1,7 @@
 import argparse
 import os
 import re
+import time
 from collections import deque
 from urllib.parse import urljoin, urlparse
 
@@ -16,6 +17,14 @@ except ModuleNotFoundError:
 def slugify(text: str) -> str:
     text = re.sub(r'\W+', '-', text.lower())
     return text.strip('-') or 'index'
+
+
+def generate_outdir(base_url: str) -> str:
+    """Create a default output directory name from the domain and current time."""
+    parsed = urlparse(base_url if '://' in base_url else f'https://{base_url}')
+    domain = (parsed.netloc or parsed.path).split('/')[0]
+    timestamp = time.strftime('%Y_%m_%d_%H.%M.%S')
+    return f'output_{domain}_{timestamp}'
 
 
 def extract_links(soup, base_url, visited):
@@ -125,10 +134,11 @@ def main():
         help='Base URL to crawl (default: %(default)s)'
     )
     parser.add_argument(
-        '--outdir', default='output', help='Directory for Markdown output'
+        '--outdir', help='Directory for Markdown output'
     )
     args = parser.parse_args()
-    crawl(args.url, args.outdir)
+    outdir = args.outdir or generate_outdir(args.url)
+    crawl(args.url, outdir)
 
 
 if __name__ == '__main__':
