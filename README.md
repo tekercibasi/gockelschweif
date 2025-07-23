@@ -17,5 +17,8 @@ This repository contains a simple crawler script for exporting the contents of a
 
    ```
    The resulting Markdown files will be written to the specified directory.
+   Any images referenced on the pages are downloaded to `output/images`
+   with simplified names (e.g. `img1.jpg`). A mapping of original URLs
+   is stored in `image_sources.txt` within that folder.
 
 Note: actual crawling might fail in restricted environments. The script expects internet access.

@@ -27,6 +27,33 @@ def extract_links(soup, base_url, visited):
                 yield href
 
 
+def process_images(soup, base_url, images_dir, counter):
+    os.makedirs(images_dir, exist_ok=True)
+    log_path = os.path.join(images_dir, "image_sources.txt")
+    log_lines = []
+    for img in soup.find_all("img"):
+        src = img.get("src")
+        if not src:
+            continue
+        img_url = urljoin(base_url, src)
+        try:
+            resp = requests.get(img_url, timeout=10)
+            resp.raise_for_status()
+        except requests.RequestException:
+            continue
+        ext = os.path.splitext(urlparse(img_url).path)[1] or ".img"
+        local_name = f"img{counter[0]}{ext}"
+        counter[0] += 1
+        with open(os.path.join(images_dir, local_name), "wb") as fh:
+            fh.write(resp.content)
+        log_lines.append(f"{local_name} {img_url}\n")
+        img["src"] = f"images/{local_name}"
+    if log_lines:
+        with open(log_path, "a", encoding="utf-8") as log_file:
+            for line in log_lines:
+                log_file.write(line)
+
+
 def html_to_markdown(soup):
     if soup.body is None:
         return ''
@@ -61,8 +88,10 @@ def html_to_markdown(soup):
 
 def crawl(base_url, outdir='output'):
     os.makedirs(outdir, exist_ok=True)
+    images_dir = os.path.join(outdir, 'images')
     visited = set()
     queue = deque([base_url])
+    img_counter = [1]
     while queue:
         url = queue.popleft()
         if url in visited:
@@ -74,6 +103,7 @@ def crawl(base_url, outdir='output'):
             print(f'Failed to fetch {url}: {e}')
             continue
         soup = BeautifulSoup(r.text, 'html.parser')
+        process_images(soup, url, images_dir, img_counter)
         slug = slugify(urlparse(url).path or 'index')
         md = html_to_markdown(soup)
         with open(os.path.join(outdir, slug + '.md'), 'w', encoding='utf-8') as f:
@@ -103,3 +133,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
