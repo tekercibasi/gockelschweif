@@ -11,7 +11,7 @@ This repository contains a simple crawler script for exporting the contents of a
    If you see `ModuleNotFoundError: No module named 'bs4'`, install the dependencies first.
 
 2. Run the crawler. Provide the URL you want to crawl (defaults to
-   `https://allmendina.de`).
+   `https://allmendina.de`):
    If no `--outdir` is given, a directory named
    `output_<domain>_<timestamp>` will be created automatically (e.g.
    `output_art-institut.de_2025_07_23_13.15.12`).
