@@ -1,2 +1,0 @@
-img1.png https://upload.wikimedia.org/wikipedia/commons/7/70/Example.png
-img2.jpg https://upload.wikimedia.org/wikipedia/commons/a/a9/Example.jpg
