@@ -139,9 +139,12 @@ def crawl(base_url, outdir='output'):
         except requests.RequestException as e:
             print(f'Failed to fetch {url}: {e}')
             continue
-        soup = BeautifulSoup(r.text, 'html.parser')
-        process_images(soup, url, images_dir, img_counter)
-        process_pdfs(soup, url, files_dir, file_counter)
+        content_type = r.headers.get('content-type', '')
+        if 'xml' in content_type or url.lower().endswith('.xml'):
+            parser = 'xml'
+        else:
+            parser = 'html.parser'
+        soup = BeautifulSoup(r.text, parser)
         slug = slugify(urlparse(url).path or 'index')
         md = html_to_markdown(soup)
         with open(os.path.join(outdir, slug + '.md'), 'w', encoding='utf-8') as f:
