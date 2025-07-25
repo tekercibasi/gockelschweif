@@ -32,6 +32,9 @@ def extract_links(soup, base_url, visited):
         href = urljoin(base_url, a['href'])
         parsed = urlparse(href)
         if parsed.netloc == urlparse(base_url).netloc:
+            if href.lower().endswith('.pdf'):
+                # PDFs are handled separately and should not be crawled
+                continue
             if href not in visited:
                 yield href
 
@@ -145,12 +148,16 @@ def crawl(base_url, outdir='output'):
         else:
             parser = 'html.parser'
         soup = BeautifulSoup(r.text, parser)
+        for link in extract_links(soup, url, visited):
+            queue.append(link)
+
+        process_images(soup, url, images_dir, img_counter)
+        process_pdfs(soup, url, files_dir, file_counter)
+
         slug = slugify(urlparse(url).path or 'index')
         md = html_to_markdown(soup)
         with open(os.path.join(outdir, slug + '.md'), 'w', encoding='utf-8') as f:
             f.write(md)
-        for link in extract_links(soup, url, visited):
-            queue.append(link)
 
 
 
